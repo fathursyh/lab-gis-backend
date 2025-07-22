@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import cors from 'cors';
-
+import authRoute from "./src/routes/authRoutes";
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 
@@ -10,7 +10,6 @@ const PORT = 3000;
 // Express Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cors({
     origin: 'http://localhost:3000', // Allow requests from this origin
     credentials: true
@@ -26,7 +25,9 @@ const limiter = rateLimit({
 
 app.use(limiter); // apply to all requests
 
-app.get('/', (req: Request, res: Response) => {
+app.use('/api/auth', authRoute);
+
+app.get('/', (_: Request, res: Response) => {
     res.send('Hello, world!');
 });
 
