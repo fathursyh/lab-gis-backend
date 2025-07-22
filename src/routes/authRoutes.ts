@@ -2,9 +2,11 @@ import { Router, Response, Request } from 'express';
 import passport from '../auth/passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel';
+import 'dotenv/config';
 
 const router = Router({strict: true});
-export const SECRET = 'kerens-banget1';
+const SECRET: string = process.env.TOKEN_KEY!;
+
 
 router.post('/register', async(req: Request, res: Response) => {
     const {email, fullName, password} = req.body;

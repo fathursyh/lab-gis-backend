@@ -1,7 +1,8 @@
 import { Sequelize } from "sequelize";
+import 'dotenv/config';
 
 
-export const sequelize: Sequelize = new Sequelize('lab-gis', 'root', '12345', {
+export const sequelize: Sequelize = new Sequelize(process.env.DB_NAME!, process.env.DB_USER!, process.env.DB_PASS, {
     dialect: 'mysql',
     host: 'localhost',
     port: 3306,
@@ -21,3 +22,5 @@ export const sequelize: Sequelize = new Sequelize('lab-gis', 'root', '12345', {
 //         console.error('Unable to connect to the database:', error);
 //     }
 // }
+
+// checkConnection()
