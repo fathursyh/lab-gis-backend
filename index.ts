@@ -1,6 +1,7 @@
 import { Response, Request } from "express";
 import cors from 'cors';
 import authRoute from "./src/routes/authRoutes";
+import userRoute from "./src/routes/userRoutes";
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 
@@ -26,6 +27,7 @@ const limiter = rateLimit({
 app.use(limiter); // apply to all requests
 
 app.use('/api/auth', authRoute);
+app.use('/api/user', userRoute);
 
 app.get('/', (_: Request, res: Response) => {
     res.send('Hello, world!');
