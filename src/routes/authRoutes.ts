@@ -1,4 +1,5 @@
 import { Router, Response, Request } from 'express';
+import emailValidator from 'node-email-verifier';
 import passport from '../auth/passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel';
@@ -11,9 +12,15 @@ const SECRET: string = process.env.TOKEN_KEY!;
 router.post('/register', async(req: Request, res: Response) => {
     const {email, fullName, password} = req.body;
     try {
-        const [user] = await User.findOrCreate({where: {email: email}, defaults: {
-            fullName: fullName, password: password
-        }});
+        const isValidEmail = await emailValidator(email.split('@')[1], {checkMx:true, timeout: 5000});
+        if (isValidEmail) {
+            throw Error();
+        }
+        const findUser = await User.findOne({where: {email: email}});
+        if (findUser) {
+            return res.sendStatus(400);
+        };
+        const user = await User.create({email, fullName, password});
         const token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email }, SECRET, {
           expiresIn: '7d',
         });
