@@ -4,12 +4,16 @@ import userRoute from "./src/routes/userRoutes";
 import 'dotenv/config';
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+import cors from 'cors';
 const app = express();
 const PORT = 3000;
-
 // Express Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+    origin: 'http://192.168.100.8:8081', // Allow requests from this origin
+    credentials: true
+}));
 
 // Rate limiter middleware (100 requests per 15 minutes per IP)
 const limiter = rateLimit({
