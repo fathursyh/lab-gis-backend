@@ -2,19 +2,18 @@ import { Router, Response, Request } from 'express';
 import passport from 'passport';
 import { Op } from 'sequelize';
 import User from '../models/userModel';
-import { checkAdmin } from '../middlewares/checkAdmin';
 const router = Router({strict: true});
 
 router.get('/token-check', passport.authenticate('jwt', {session: false}), (_: Request, res: Response) => {
     res.sendStatus(200);
 });
 
-router.get('/all-users', passport.authenticate('jwt', {session: false}), checkAdmin, async(req: Request, res: Response) => {
+router.get('/all-users', passport.authenticate('jwt', {session: false}), async(req: Request, res: Response) => {
     try {
-    const page = parseInt((req.query.page as string) || '1', 10);
-    const limit = 10;
+    // const page = parseInt((req.query.page as string) || '1', 10);
+    // const limit = 10;
     const search = (req.query.search as string) || '';
-    const offset = (page - 1) * limit;
+    // const offset = (page - 1) * limit;
 
     // Filter logic
     const where = search
@@ -28,20 +27,20 @@ router.get('/all-users', passport.authenticate('jwt', {session: false}), checkAd
 
     const { rows, count } = await User.findAndCountAll({
       where,
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
+      // limit,
+      // offset,
+      order: [['fullName', 'ASC']],
       attributes: ['id', 'fullName', 'email', 'createdAt'],
     });
-
+    console.log(count);
     return res.json({
       data: rows,
-      pagination: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
-      },
+      // pagination: {
+      //   total: count,
+      //   page,
+      //   limit,
+      //   totalPages: Math.ceil(count / limit),
+      // },
     });
   } catch (err) {
     console.error(err);
