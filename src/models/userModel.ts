@@ -45,10 +45,9 @@ const User = sequelize.define("User", {
     },
 });
 
-// ? run for sync user table
-// User.sync();
 
 export function validatePassword(password: string, userPassword: string) {
     return bcrypt.compare(password, userPassword);
 }
+
 export default User;

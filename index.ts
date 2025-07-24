@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import authRoute from "./src/routes/authRoutes";
 import userRoute from "./src/routes/userRoutes";
 import adminRoute from "./src/routes/adminRoutes";
+import projectRoute from "./src/routes/projectRoutes";
 import rateLimit from 'express-rate-limit';
 import express from 'express'
 import 'dotenv/config';
@@ -9,6 +10,7 @@ import cors from 'cors';
 
 const PORT = 3000;
 const app = express();
+
 // Express Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,6 +32,7 @@ app.use(limiter);
 
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
+app.use('/api/project', projectRoute);
 app.use('/api/admin-only', adminRoute);
 
 app.get('/', (_: Request, res: Response) => {

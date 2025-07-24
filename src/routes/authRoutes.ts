@@ -2,8 +2,8 @@ import { Router, Response, Request } from 'express';
 import emailValidator from 'node-email-verifier';
 import passport from '../auth/passport';
 import jwt from 'jsonwebtoken';
-import User from '../models/userModel';
 import 'dotenv/config';
+import { User } from '../models';
 
 const router = Router({strict: true});
 const SECRET: string = process.env.TOKEN_KEY!;

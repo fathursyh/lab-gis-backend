@@ -1,7 +1,7 @@
 import { Router, Response, Request } from 'express';
 import passport from 'passport';
 import { Op } from 'sequelize';
-import User from '../models/userModel';
+import { User } from '../models';
 const router = Router({strict: true});
 
 router.get('/token-check', passport.authenticate('jwt', {session: false}), (_: Request, res: Response) => {
@@ -30,7 +30,7 @@ router.get('/all-users', passport.authenticate('jwt', {session: false}), async(r
       // limit,
       // offset,
       order: [['fullName', 'ASC']],
-      attributes: ['id', 'fullName', 'email', 'createdAt'],
+      attributes: ['id', 'fullName', 'email', 'createdAt', 'role'],
     });
     console.log(count);
     return res.json({

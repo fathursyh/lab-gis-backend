@@ -1,7 +1,7 @@
 import { Router, Response, Request } from 'express';
 import passport from 'passport';
-import User from '../models/userModel';
 import { checkAdmin } from '../middlewares/checkAdmin';
+import { User } from '../models';
 const router = Router({strict: true});
 
 router.patch('/change-role', passport.authenticate('jwt', {session: false}), checkAdmin, async(req: Request, res: Response) => {

@@ -1,9 +1,10 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
-import User, { validatePassword } from '../models/userModel';
-import 'dotenv/config';
+import { validatePassword } from '../models/userModel';
+import { User } from '../models';
 
+import 'dotenv/config';
 
 passport.use(new LocalStrategy({usernameField: 'email', passwordField: 'password'}, async function verify(email, password, cb,) {
   const user = await User.findOne({ where: { email: email } }).then(data => data?.dataValues);
