@@ -1,51 +1,17 @@
 import { Router, Response, Request } from 'express';
 import passport from 'passport';
-import { Op } from 'sequelize';
-import { User } from '../models';
-const router = Router({strict: true});
+import { userController } from '../controllers/userController';
+import { checkAdmin } from '../middlewares/checkAdmin';
 
-router.get('/token-check', passport.authenticate('jwt', {session: false}), (_: Request, res: Response) => {
-    res.sendStatus(200);
-});
+const router = Router({strict: true}).use(passport.authenticate('jwt', {session: false}));
 
-router.get('/all-users', passport.authenticate('jwt', {session: false}), async(req: Request, res: Response) => {
-    try {
-    // const page = parseInt((req.query.page as string) || '1', 10);
-    // const limit = 10;
-    const search = (req.query.search as string) || '';
-    // const offset = (page - 1) * limit;
+// * cek token di client
+router.get('/token-check', (_: Request, res: Response) => res.sendStatus(200));
 
-    // Filter logic
-    const where = search
-      ? {
-          [Op.or]: [
-            { fullName: { [Op.like]: `%${search}%` } },
-            { email: { [Op.like]: `%${search}%` } },
-          ],
-        }
-      : {};
+/* ADMIN ONLY ROUTES */
+router.use(checkAdmin);
 
-    const { rows, count } = await User.findAndCountAll({
-      where,
-      // limit,
-      // offset,
-      order: [['fullName', 'ASC']],
-      attributes: ['id', 'fullName', 'email', 'createdAt', 'role'],
-    });
-    console.log(count);
-    return res.json({
-      data: rows,
-      // pagination: {
-      //   total: count,
-      //   page,
-      //   limit,
-      //   totalPages: Math.ceil(count / limit),
-      // },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-})
+// * fetch semua user
+router.get('/all-users', userController.getUsers);
 
 export default router;

@@ -26,3 +26,6 @@ Thumbs.db
 # Coverage reports (if using testing)
 coverage/
 
+# file upload
+/uploads
+

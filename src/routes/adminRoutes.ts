@@ -21,7 +21,7 @@ router.patch('/change-role', async(req: Request, res: Response) => {
 router.get('/sync-db', async (_, res: Response) => {
     await syncDatabase();
     res.send('Database tersingkronisasi.');
-} )
+} );
 
 
 export default router;
