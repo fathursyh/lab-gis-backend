@@ -20,6 +20,7 @@ Event.hasMany(Registration, {
 // * hubungan registration - user
 Registration.belongsTo(User, {
   foreignKey: 'userId',
+  as: 'user'
 });
 
 // * hubungan registration - event

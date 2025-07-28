@@ -234,8 +234,8 @@ export const eventController = {
             // Ambil registrasi + user
             const attendees = await Registration.findAll({
                 where: { eventId: id },
-                attributes: ["id", "status", "createdAt"],
-                include: { model: User, attributes: ["id", "fullName", "email"] },
+                attributes: ["id", "status", "registeredAt"],
+                include: { model: User, attributes: ["id", "fullName", "email"], as: 'user' },
             });
 
             return res.json({
