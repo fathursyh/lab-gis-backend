@@ -1,22 +1,36 @@
 import User from "./userModel";
-import Project from "./projectModel";
+import Event from "./eventModel";
+import Registration from "./registrationModel";
 
-// * hubungan user - project
-User.hasOne(Project, {
+// * hubungan user - registration
+User.hasMany(Registration, {
   onUpdate: 'CASCADE',
   onDelete: 'CASCADE',
   foreignKey: 'userId',
-  as: 'project'
 });
 
-Project.belongsTo(User, {
+// * hubungan event - registration
+Event.hasMany(Registration, {
   onUpdate: 'CASCADE',
   onDelete: 'CASCADE',
-  foreignKey: 'userId',
-  as: 'user',
+  foreignKey: 'eventId',
+  as: 'registrations'
 });
+
+// * hubungan registration - user
+Registration.belongsTo(User, {
+  foreignKey: 'userId',
+});
+
+// * hubungan registration - event
+Registration.belongsTo(Event, {
+  foreignKey: 'eventId',
+  as: 'event'
+});
+
 
 export {
   User,
-  Project
+  Event,
+  Registration,
 }
