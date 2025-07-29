@@ -33,6 +33,7 @@ export const userController = {
                     limit,
                     totalPages: Math.ceil(count / limit),
                 },
+                hasMore: page * limit < count,
             });
         } catch (err) {
             console.error(err);
