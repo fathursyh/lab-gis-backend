@@ -6,41 +6,23 @@ import path from "path";
 import QRCode from "qrcode";
 import { EventInterface } from "../interfaces/EventInterface";
 import { RegistrationInterface } from "../interfaces/RegistrationInterface";
+import { dbService } from "../services/dbService";
 
 export const eventController = {
     // buat fetch semua
     getEvent: async (req: Request, res: Response) => {
         try {
             const page = parseInt((req.query.page as string) || "1", 10);
-            const limit = parseInt((req.query.limit as string) || "10", 10);
             const search = (req.query.search as string) || "";
+            const limit = 10;
             const offset = (page - 1) * limit;
+            const where = search ? {[Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { description: { [Op.like]: `%${search}%` } }]} : {};
+            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: ["id", "title", "description", "createdAt"], page };
+            
+            // start fetching
+            const result = await dbService.findAllFromDb(params, Event);
 
-            // Filter logic
-            const where = search
-                ? {
-                      [Op.or]: [{ name: { [Op.like]: `%${search}%` } }, { description: { [Op.like]: `%${search}%` } }],
-                  }
-                : {};
-
-            const { rows, count } = await Event.findAndCountAll({
-                where,
-                limit,
-                offset,
-                order: [["createdAt", "DESC"]],
-                attributes: ["id", "title", "description", "createdAt"],
-            });
-
-            return res.json({
-                data: rows,
-                pagination: {
-                    total: count,
-                    page,
-                    limit,
-                    totalPages: Math.ceil(count / limit),
-                },
-                hasMore: page * limit < count,
-            });
+            return res.json(result);
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: "Internal server error" });
@@ -50,14 +32,14 @@ export const eventController = {
     detailEvent: async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            const event : EventInterface | null = await Event.findOne({where: {id}});
+            const event: EventInterface | null = await Event.findOne({ where: { id } });
             if (!event) {
-                return res.status(404).json({message: 'Event tidak ditemukan'});
+                return res.status(404).json({ message: "Event tidak ditemukan" });
             }
             return res.json({
-                event
-            })
-        } catch(err) {
+                event,
+            });
+        } catch (err) {
             console.error(err);
             res.status(500).json({ message: "Internal server error" });
         }
@@ -235,7 +217,7 @@ export const eventController = {
             const attendees = await Registration.findAll({
                 where: { eventId: id },
                 attributes: ["id", "status", "registeredAt"],
-                include: { model: User, attributes: ["id", "fullName", "email"], as: 'user' },
+                include: { model: User, attributes: ["id", "fullName", "email"], as: "user" },
             });
 
             return res.json({
