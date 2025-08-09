@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { Registration, Event, User } from "../models";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import fs from "fs";
 import path from "path";
 import QRCode from "qrcode";
 import { EventInterface } from "../interfaces/EventInterface";
 import { RegistrationInterface } from "../interfaces/RegistrationInterface";
 import { dbService } from "../services/dbService";
+import { randomUUID } from "crypto";
+
+const eventAttributes = ["id", "title", "description", "mentor", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
 
 export const eventController = {
     // buat fetch semua
@@ -16,9 +19,22 @@ export const eventController = {
             const search = (req.query.search as string) || "";
             const limit = 10;
             const offset = (page - 1) * limit;
-            const where = search ? {[Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { description: { [Op.like]: `%${search}%` } }]} : {};
-            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: ["id", "title", "description", "createdAt"], page };
-            
+            const where = search
+                ? {
+                    [Op.or]: [
+                        Sequelize.where(
+                            Sequelize.fn('LOWER', Sequelize.col('title')),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        ),
+                        Sequelize.where(
+                            Sequelize.fn('LOWER', Sequelize.col('mentor')),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        )
+                    ]
+                }
+                : {};
+            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page };
+
             // start fetching
             const result = await dbService.findAllFromDb(params, Event);
 
@@ -47,14 +63,15 @@ export const eventController = {
     // buat event baru
     newEvent: async (req: Request, res: Response) => {
         try {
-            const { title, description, location, startDate, endDate, quota } = req.body;
+            const { title, description, location, startDate, endDate, quota, mentor } = req.body;
 
-            const banner = (req as any).file ? `/uploads/${(req as any).file.filename}` : null;
+            const banner = req.file ? `/uploads/${req.file.filename}` : null;
 
             const event = await Event.create({
                 title,
                 description,
                 location,
+                mentor,
                 startDate,
                 endDate,
                 banner,
@@ -162,7 +179,7 @@ export const eventController = {
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
             // Payload event id isinya
-            const payload = JSON.stringify({ eventId: event.id });
+            const payload = JSON.stringify({ eventId: event.id, qrCode: randomUUID() });
             const qr = await QRCode.toDataURL(payload);
 
             return res.json({ qrCode: qr });
@@ -175,19 +192,25 @@ export const eventController = {
     markAttendance: async (req: Request, res: Response) => {
         try {
             const { id } = req.params; // eventId
+            const { qrCode } = req.body;
             const userId = req.user;
 
             const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId } });
-            if (!registration) return res.status(404).json({ message: "Event tidak ada" });
+            if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
-            if (registration.status === "checked-in") {
-                return res.status(400).json({ message: "Presensi sudah didata" });
-            }
             if (registration.status === "cancelled") {
                 return res.status(400).json({ message: "Registrasi sudah dibatalkan" });
             }
 
-            registration.status = "checked-in";
+            if (registration.lastQR === qrCode) {
+                return res.status(400).json({ message: "Presensi hari ini sudah tercatat." });
+            }
+
+            if (registration.status !== "checked-in") {
+                registration.status = "checked-in";
+            }
+            registration.attendance = registration.attendance! + 1;
+            registration.lastQR = qrCode;
             await registration.save();
 
             return res.json({

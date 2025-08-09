@@ -29,7 +29,6 @@ Registration.belongsTo(Event, {
   as: 'event'
 });
 
-
 export {
   User,
   Event,

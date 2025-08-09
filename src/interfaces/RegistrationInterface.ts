@@ -5,5 +5,7 @@ export interface RegistrationInterface extends Model {
     status?: 'registered' | 'cancelled' | 'checked-in',
     registeredAt?: Date,
     userId?: string,
-    eventId?: string
+    eventId?: string,
+    attendance?: number,
+    lastQR?: string,
 }

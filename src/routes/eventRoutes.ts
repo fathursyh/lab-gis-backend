@@ -5,6 +5,7 @@ import { upload } from "../middlewares/upload";
 import { checkAdmin } from "../middlewares/checkAdmin";
 
 const router = Router({ strict: true }).use(passport.authenticate("jwt", { session: false }));
+// const router = Router({ strict: true }) // test purpose
 
 // * fetch semua event
 router.get('/', eventController.getEvent);

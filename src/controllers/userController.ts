@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { User } from "../models";
 import { dbService } from "../services/dbService";
 
@@ -10,9 +10,22 @@ export const userController = {
             const limit = 10;
             const search = (req.query.search as string) || "";
             const offset = (page - 1) * limit;
-            const where = search ? {[Op.or]: [{ fullName: { [Op.like]: `%${search}%` } }, { email: { [Op.like]: `%${search}%` } }]} : {};
+            const where = search
+                ? {
+                    [Op.or]: [
+                        Sequelize.where(
+                            Sequelize.fn('LOWER', Sequelize.col('fullName')),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        ),
+                        Sequelize.where(
+                            Sequelize.fn('LOWER', Sequelize.col('email')),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        )
+                    ]
+                }
+                : {};
             const params = { where, limit, offset, order: [["fullName", "ASC"]], attributes: ["id", "fullName", "email", "createdAt", "role"], page };
-          
+
             // start fetching
             const result = await dbService.findAllFromDb(params, User);
 

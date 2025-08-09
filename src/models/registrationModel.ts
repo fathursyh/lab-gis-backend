@@ -13,6 +13,15 @@ const Registration = sequelize.define("Registration", {
         defaultValue: "registered",
         allowNull: false
     },
+    attendance: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+    },
+    lastQR: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     updatedAt: false,
     createdAt: 'registeredAt'

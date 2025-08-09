@@ -15,6 +15,10 @@ const Event = sequelize.define("Event", {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    mentor: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     location: {
         type: DataTypes.STRING,
         allowNull: false
