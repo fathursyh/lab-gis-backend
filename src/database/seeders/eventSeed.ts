@@ -12,7 +12,8 @@ async function seedEvent() {
             location: 'iLab GIS',
             startDate: faker.date.soon({days: 1}),
             endDate: faker.date.soon({days: 30}),
-            quota: 20
+            quota: 20,
+            price: 50000
         }
 
         events.push(event);

@@ -194,9 +194,9 @@ export const eventController = {
         try {
             const { id } = req.params; // eventId
             const { qrCode, date } = req.body;
-            const userId = '0e961179-b24c-4a8e-bf88-264004e7497a';
+            const userId = req.user;
 
-            const isValidDate = dayjs(new Date).diff(date?? new Date(), 'd') === 0;
+            const isValidDate = dayjs(new Date).diff(date?? null, 'd') === 0;
             
             if (!isValidDate) return res.status(400).json({message: 'QR kadaluarsa'});
 

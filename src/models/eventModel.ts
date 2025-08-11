@@ -41,6 +41,10 @@ const Event = sequelize.define("Event", {
         defaultValue: 0,
         allowNull: false
     },
+    price: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
     duration: {
         type: DataTypes.VIRTUAL,
         get() {

@@ -3,6 +3,7 @@ import authRoute from "./src/routes/authRoutes";
 import userRoute from "./src/routes/userRoutes";
 import adminRoute from "./src/routes/adminRoutes";
 import eventRoute from "./src/routes/eventRoutes";
+import paymentRoute from "./src/routes/paymentRoutes";
 import rateLimit from 'express-rate-limit';
 import express from 'express'
 import 'dotenv/config';
@@ -45,6 +46,7 @@ app.use(limiter);
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use('/api/event', eventRoute);
+app.use('/api/payments', paymentRoute);
 app.use('/api/admin-only', adminRoute);
 
 app.get('/', (_: Request, res: Response) => {
