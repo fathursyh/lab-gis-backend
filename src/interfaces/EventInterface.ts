@@ -9,5 +9,6 @@ export interface EventInterface extends Model  {
     startDate?: Date,
     endDate?: Date,
     banner?: string,
-    quota?: number
+    quota?: number,
+    duration?: number
 }

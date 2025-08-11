@@ -8,6 +8,7 @@ import { EventInterface } from "../interfaces/EventInterface";
 import { RegistrationInterface } from "../interfaces/RegistrationInterface";
 import { dbService } from "../services/dbService";
 import { randomUUID } from "crypto";
+import dayjs from "dayjs";
 
 const eventAttributes = ["id", "title", "description", "mentor", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
 
@@ -179,7 +180,7 @@ export const eventController = {
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
             // Payload event id isinya
-            const payload = JSON.stringify({ eventId: event.id, qrCode: randomUUID() });
+            const payload = JSON.stringify({ eventId: event.id, qrCode: randomUUID(), date: new Date() });
             const qr = await QRCode.toDataURL(payload);
 
             return res.json({ qrCode: qr });
@@ -192,25 +193,38 @@ export const eventController = {
     markAttendance: async (req: Request, res: Response) => {
         try {
             const { id } = req.params; // eventId
-            const { qrCode } = req.body;
-            const userId = req.user;
+            const { qrCode, date } = req.body;
+            const userId = '0e961179-b24c-4a8e-bf88-264004e7497a';
+
+            const isValidDate = dayjs(new Date).diff(date?? new Date(), 'd') === 0;
+            
+            if (!isValidDate) return res.status(400).json({message: 'QR kadaluarsa'});
+
+            const eventDuration = await Event.findOne({where: {id}, attributes: ['startDate', 'endDate']}).then((data: EventInterface | null) => data?.duration);
+
+            if (!eventDuration) return res.status(404).json({message: "Event tidak ditemukan"});
 
             const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId } });
+            
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
-
-            if (registration.status === "cancelled") {
-                return res.status(400).json({ message: "Registrasi sudah dibatalkan" });
-            }
 
             if (registration.lastQR === qrCode) {
                 return res.status(400).json({ message: "Presensi hari ini sudah tercatat." });
             }
 
+            if (registration.status === 'passed') res.status(400).json({message: 'Peserta sudah lulus'});
+
             if (registration.status !== "checked-in") {
                 registration.status = "checked-in";
             }
+            
             registration.attendance = registration.attendance! + 1;
             registration.lastQR = qrCode;
+
+            if (registration.attendance === eventDuration) {
+                registration.status = 'passed'
+            }
+
             await registration.save();
 
             return res.json({

@@ -11,7 +11,7 @@ async function seedEvent() {
             mentor: faker.person.fullName(),
             location: 'iLab GIS',
             startDate: faker.date.soon({days: 1}),
-            endDate: faker.date.soon({days: 4}),
+            endDate: faker.date.soon({days: 30}),
             quota: 20
         }
 

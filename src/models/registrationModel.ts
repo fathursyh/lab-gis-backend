@@ -9,7 +9,7 @@ const Registration = sequelize.define("Registration", {
     },
     status: {
         type: DataTypes.ENUM,
-        values: ["registered", "checked-in", "cancelled"],
+        values: ["registered", "checked-in", "passed"],
         defaultValue: "registered",
         allowNull: false
     },
@@ -22,8 +22,13 @@ const Registration = sequelize.define("Registration", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    payments: {
+        type: DataTypes.ENUM,
+        values: ['UNPAID', 'PAID'],
+        defaultValue: 'UNPAID',
+        allowNull: false
+    },
 }, {
-    updatedAt: false,
     createdAt: 'registeredAt'
 });
 

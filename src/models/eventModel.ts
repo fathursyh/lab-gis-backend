@@ -1,5 +1,6 @@
 import { sequelize } from "../config/sequelize";
 import { DataTypes } from "sequelize";
+import dayjs from 'dayjs'
 
 const Event = sequelize.define("Event", {
     id: {
@@ -39,7 +40,13 @@ const Event = sequelize.define("Event", {
         type: DataTypes.INTEGER,
         defaultValue: 0,
         allowNull: false
-    }
+    },
+    duration: {
+        type: DataTypes.VIRTUAL,
+        get() {
+            return dayjs((this as any).endDate).diff((this as any).startDate, 'd')
+        }
+    },
 });
 
 export default Event;
