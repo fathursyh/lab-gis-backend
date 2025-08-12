@@ -28,6 +28,10 @@ const Registration = sequelize.define("Registration", {
         defaultValue: 'UNPAID',
         allowNull: false
     },
+    paymentId: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+    }
 }, {
     createdAt: 'registeredAt'
 });

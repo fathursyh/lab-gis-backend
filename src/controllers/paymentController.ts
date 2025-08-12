@@ -7,7 +7,7 @@ import { paymentService } from "../services/paymentService";
 export const paymentController = {
     generatePayment: async (req: Request, res: Response) => {
         try {
-            const { eventId, userDetail } = req.body;
+            const { eventId, userDetail, orderId } = req.body;
 
             const event: EventInterface | null = await Event.findByPk(eventId, {
                 attributes: ['id', 'title', 'price'],
@@ -17,10 +17,10 @@ export const paymentController = {
                 res.status(404).json({ message: "Event tidak ditemukan" });
             }
 
-            const response = await paymentService.requestPaymentLink(event!, userDetail);
-
+            const response = await paymentService.requestPaymentLink(event!, userDetail, orderId);
+            
             res.json({
-                payment_link: response.data.payment_url
+                paymentLink: response.data.payment_url
             });
 
         } catch (err) {

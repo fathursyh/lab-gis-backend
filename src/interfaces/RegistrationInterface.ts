@@ -8,4 +8,6 @@ export interface RegistrationInterface extends Model {
     eventId?: string,
     attendance?: number,
     lastQR?: string,
+    payments?: 'UNPAID' | 'PAID',
+    paymentId?: string
 }

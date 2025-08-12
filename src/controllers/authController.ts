@@ -20,7 +20,7 @@ export const authController = {
                 return res.sendStatus(400);
             }
             const user = await User.create({ email, fullName, password });
-            const token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email }, SECRET, {
+            const token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email, fullName: user.dataValues.fullName }, SECRET, {
                 expiresIn: "7d",
             });
             return res.json({ token, user });
@@ -31,7 +31,7 @@ export const authController = {
     // logic login
     login: (req: Request, res: Response) => {
         const user: any = req.user;
-        const token = jwt.sign({ id: user.id, email: user.email }, SECRET, {
+        const token = jwt.sign({ id: user.id, email: user.email, fullName: user.fullName }, SECRET, {
             expiresIn: "7d",
         });
         delete user.password;

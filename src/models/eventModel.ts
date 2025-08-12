@@ -48,7 +48,7 @@ const Event = sequelize.define("Event", {
     duration: {
         type: DataTypes.VIRTUAL,
         get() {
-            return dayjs((this as any).endDate).diff((this as any).startDate, 'd')
+            return dayjs((this as any).endDate).diff((this as any).startDate, 'd') + 1;
         }
     },
 });

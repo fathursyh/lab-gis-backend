@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { User } from "../models";
 
 export async function checkAdmin(req: Request, res: Response, next: NextFunction) {
-    const id: any = req.user;
+    const {id}: any = req.user;
     const user = await User.findByPk(id, {
         attributes: ['role'],
     })

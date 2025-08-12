@@ -1,5 +1,4 @@
 import axios from "axios";
-import { randomUUID } from "crypto";
 import "dotenv/config";
 import { EventInterface } from "../interfaces/EventInterface";
 import { UserInterface } from "../interfaces/UserInterface";
@@ -14,11 +13,11 @@ const headers = {
 }
 
 export const paymentService = {
-    requestPaymentLink: async (event: EventInterface, userDetail: UserInterface) => {
+    requestPaymentLink: async (event: EventInterface, userDetail: UserInterface, orderId: string) => {
         const userName = userDetail.fullName.split(' ');
         const payload = {
             transaction_details: {
-                order_id: `order-gis-${event?.id?.slice(0, 6)}-${randomUUID().slice(0, 6)}`,
+                order_id: orderId,
                 gross_amount: event?.price
             },
             customer_details: {
@@ -51,18 +50,17 @@ export const paymentService = {
         );
     },
     checkPayment: async (orderId: string) => {
-        const response =  await axios.get(`${MIDTRANS_BASE_URL}/v2/${orderId}/status`, {
+        const response =  await axios.get(`${MIDTRANS_BASE_URL}/v1/payment-links/${orderId}`, {
             headers,
         });
-        if (response.status === 404 || response.data.transaction_status !== 'settlement') return {
-            transactionId: response.data.transaction_id,
-            orderId: orderId,
+        
+        if (response.status === 404 || response.data.purchases[0]?.payment_status !== 'SETTLEMENT') return {
             paid: false,
             price: response.data.gross_amount,
         }
+        
         return {
-            transactionId: response.data.transaction_id,
-            orderId: orderId,
+            orderId: response.data.purchases[0]?.order_id,
             paid: true,
             price: response.data.gross_amount,
         }

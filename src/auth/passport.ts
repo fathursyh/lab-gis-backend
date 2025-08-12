@@ -20,7 +20,7 @@ passport.use(new JwtStrategy({
   ignoreExpiration: false,
 
 }, (payload, done) => {
-  return done(null, payload.id);
+  return done(null, payload);
 }));
 
 export default passport;

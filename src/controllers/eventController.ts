@@ -9,6 +9,7 @@ import { RegistrationInterface } from "../interfaces/RegistrationInterface";
 import { dbService } from "../services/dbService";
 import { randomUUID } from "crypto";
 import dayjs from "dayjs";
+import { paymentService } from "../services/paymentService";
 
 const eventAttributes = ["id", "title", "description", "mentor", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
 
@@ -64,7 +65,7 @@ export const eventController = {
     // buat event baru
     newEvent: async (req: Request, res: Response) => {
         try {
-            const { title, description, location, startDate, endDate, quota, mentor } = req.body;
+            const { title, description, location, startDate, endDate, quota, mentor, price } = req.body;
 
             const banner = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -77,6 +78,7 @@ export const eventController = {
                 endDate,
                 banner,
                 quota,
+                price
             });
 
             return res.status(201).json({
@@ -92,7 +94,7 @@ export const eventController = {
     updateEvent: async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            const { title, description, location, startDate, endDate, quota } = req.body;
+            const { title, description, location, mentor, startDate, endDate, quota, price } = req.body;
 
             const event = await Event.findByPk(id);
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
@@ -105,7 +107,7 @@ export const eventController = {
                 banner = `/uploads/${(req as any).file.filename}`;
             }
 
-            await event.update({ title, description, location, startDate, endDate, quota, banner });
+            await event.update({ title, description, mentor, location, startDate, endDate, quota, banner, price });
 
             return res.json({ message: "Event berhasil diubah", event });
         } catch (error) {
@@ -141,7 +143,7 @@ export const eventController = {
     registerEvent: async (req: Request, res: Response) => {
         try {
             const eventId = req.params.id;
-            const userId = req.user;
+            const user = req.user as any;
 
             // 1. Pastikan event ada
             const event = await Event.findByPk(eventId);
@@ -149,7 +151,7 @@ export const eventController = {
 
             // 2. Cek apakah sudah daftar
             const alreadyRegistered = await Registration.findOne({
-                where: { eventId, userId },
+                where: { eventId, userId: user.id },
             });
             if (alreadyRegistered) return res.status(400).json({ message: "Sudah terdaftar" });
 
@@ -158,17 +160,22 @@ export const eventController = {
             if (countRegistered >= (event as any).quota) return res.status(400).json({ message: "Quota penuh" });
 
             // 4. Buat registrasi
-            const registration = await Registration.create({
+            const today = new Date();
+            const orderId = `order-gis-${eventId.slice(0, 6)}-${today.getMonth()}${today.getFullYear()}-${today.getMilliseconds()}`;
+            await Registration.create({
                 eventId,
-                userId,
+                userId: user.id,
+                paymentId: orderId
             });
+
+            const payment = await paymentService.requestPaymentLink(event, user, orderId);
 
             return res.status(201).json({
                 message: "Registrasi sukses",
-                registration,
+                paymentLink: payment.data.payment_url
             });
-        } catch (error) {
-            console.error(error);
+        } catch (error : any) {
+            console.error(error.response);
             return res.status(500).json({ message: "Internal server error" });
         }
     },
@@ -194,7 +201,7 @@ export const eventController = {
         try {
             const { id } = req.params; // eventId
             const { qrCode, date } = req.body;
-            const userId = req.user;
+            const {id: userId} = req.user as any;
 
             const isValidDate = dayjs(new Date).diff(date?? null, 'd') === 0;
             
@@ -204,7 +211,7 @@ export const eventController = {
 
             if (!eventDuration) return res.status(404).json({message: "Event tidak ditemukan"});
 
-            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId } });
+            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: {[Op.not]: 'passed'} } });
             
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
@@ -212,9 +219,13 @@ export const eventController = {
                 return res.status(400).json({ message: "Presensi hari ini sudah tercatat." });
             }
 
-            if (registration.status === 'passed') res.status(400).json({message: 'Peserta sudah lulus'});
-
-            if (registration.status !== "checked-in") {
+            if (registration.status === "registered") {
+                if (registration.payments === 'UNPAID') {
+                    const paymentCheck = await paymentService.checkPayment(registration.paymentId!);
+                    if (!paymentCheck.paid) return res.status(400).json({message: 'Pembayaran belum selesai'});
+                    registration.paymentId = paymentCheck.orderId;
+                    registration.payments = "PAID";
+                }
                 registration.status = "checked-in";
             }
             
