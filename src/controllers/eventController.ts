@@ -11,7 +11,7 @@ import { randomUUID } from "crypto";
 import dayjs from "dayjs";
 import { paymentService } from "../services/paymentService";
 
-const eventAttributes = ["id", "title", "description", "mentor", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
+const eventAttributes = ["id", "title", "description", "mentor", "price", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
 
 export const eventController = {
     // buat fetch semua
@@ -48,15 +48,15 @@ export const eventController = {
     },
     // cek detail event
     detailEvent: async (req: Request, res: Response) => {
+        console.log('fetching')
         try {
             const { id } = req.params;
             const event: EventInterface | null = await Event.findOne({ where: { id } });
             if (!event) {
                 return res.status(404).json({ message: "Event tidak ditemukan" });
             }
-            return res.json({
-                event,
-            });
+            console.log(event);
+            return res.json(event);
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: "Internal server error" });
