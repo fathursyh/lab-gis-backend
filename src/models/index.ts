@@ -1,6 +1,7 @@
 import User from "./userModel";
 import Event from "./eventModel";
 import Registration from "./registrationModel";
+import Payment from "./paymentModel";
 
 // * hubungan user - registration
 User.hasMany(Registration, {
@@ -29,8 +30,14 @@ Registration.belongsTo(Event, {
   as: 'event'
 });
 
+// * hubungan registration - payment
+Registration.hasOne(Payment, {
+  foreignKey: 'registrationId',
+});
+
 export {
   User,
   Event,
   Registration,
+  Payment
 }

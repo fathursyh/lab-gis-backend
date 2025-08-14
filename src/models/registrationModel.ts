@@ -22,20 +22,6 @@ const Registration = sequelize.define("Registration", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    payments: {
-        type: DataTypes.ENUM,
-        values: ['UNPAID', 'PAID'],
-        defaultValue: 'UNPAID',
-        allowNull: false
-    },
-    paymentId: {
-        type: DataTypes.STRING(40),
-        allowNull: true,
-    },
-    paymentLink: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
 }, {
     createdAt: 'registeredAt'
 });

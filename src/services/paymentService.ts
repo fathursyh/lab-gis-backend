@@ -2,6 +2,8 @@ import axios from "axios";
 import "dotenv/config";
 import { EventInterface } from "../interfaces/EventInterface";
 import { UserInterface } from "../interfaces/UserInterface";
+import { PaymentInterface } from "../interfaces/PaymentInterface";
+import { Payment } from "../models";
 
 const environment = process.env.ENVIRONMENT;
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
@@ -45,20 +47,18 @@ export const paymentService = {
             }
         );
     },
-    checkPayment: async (orderId: string) => {
-        const response =  await axios.get(`${MIDTRANS_BASE_URL}/v1/payment-links/${orderId}`, {
+    checkPayment: async (registrationId: string) => {
+
+        const payment : PaymentInterface | null = await Payment.findOne({where: {registrationId: registrationId}});
+        if (!payment) return false;
+        const response =  await axios.get(`${MIDTRANS_BASE_URL}/v1/payment-links/${payment.paymentId}`, {
             headers,
         });
         
-        if (response.status === 404 || response.data.purchases[0]?.payment_status !== 'SETTLEMENT') return {
-            paid: false,
-            price: response.data.gross_amount,
-        }
+        if (response.status === 404 || response.data.purchases[0]?.payment_status !== 'SETTLEMENT') return false;  
+        payment.payments = 'PAID';
+        await payment.save();
         
-        return {
-            orderId: response.data.purchases[0]?.order_id,
-            paid: true,
-            price: response.data.gross_amount,
-        }
+        return true;
     }
 }

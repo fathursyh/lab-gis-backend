@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Registration, Event, User } from "../models";
+import { Registration, Event, User, Payment } from "../models";
 import { Op, Sequelize } from "sequelize";
 import fs from "fs";
 import path from "path";
@@ -42,8 +42,8 @@ export const eventController = {
     },
     // get all event tapi tandain yg beres
     getEventTagged: async (req: Request, res: Response) => {
-         try {
-            const {id: userId} = req.user as any;
+        try {
+            const { id: userId } = req.user as any;
             const page = parseInt((req.query.page as string) || "1", 10);
             const search = (req.query.search as string) || "";
             const limit = 10;
@@ -56,7 +56,19 @@ export const eventController = {
                       ],
                   }
                 : {};
-            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page, includeModel: Registration, includeAttributes: ['status'], alias: 'registrations', includeWhere: {userId: userId}, innerJoin: false };
+            const params = {
+                where,
+                limit,
+                offset,
+                order: [["createdAt", "DESC"]],
+                attributes: eventAttributes,
+                page,
+                includeModel: Registration,
+                includeAttributes: ["status"],
+                alias: "registrations",
+                includeWhere: { userId: userId },
+                innerJoin: false,
+            };
 
             // start fetching
             const result = await dbService.findAllFromDb(params, Event);
@@ -70,7 +82,7 @@ export const eventController = {
     // buat get event based on registration milik user
     getUserEvent: async (req: Request, res: Response) => {
         try {
-            const {id: userId} = req.user as any
+            const { id: userId } = req.user as any;
             const page = parseInt((req.query.page as string) || "1", 10);
             const search = (req.query.search as string) || "";
             const limit = 10;
@@ -85,14 +97,14 @@ export const eventController = {
                               ],
                           },
                           {
-                            userId
-                          }
+                              userId,
+                          },
                       ],
                   }
                 : {
-                    userId
-                };
-            const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ['status'], page, includeModel: Event, includeAttributes: eventAttributes, alias: 'event' };
+                      userId,
+                  };
+            const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ["status"], page, includeModel: Event, includeAttributes: eventAttributes, alias: "event" };
 
             // start fetching
             const result = await dbService.findAllFromDb(params, Registration);
@@ -218,21 +230,25 @@ export const eventController = {
             // 4. Buat registrasi
             const today = new Date();
             const orderId = `order-gis-${eventId.slice(0, 6)}-${today.getMonth()}${today.getFullYear()}-${today.getMilliseconds()}`;
-            
+
             const payment = await paymentService.requestPaymentLink(event, user, orderId);
 
-            await Registration.create({
+            const registration: RegistrationInterface = await Registration.create({
                 eventId,
                 userId: user.id,
-                paymentId: orderId,
-                paymentLink: payment.data.payment_url
             });
 
+            Payment.create({
+                registrationId: registration.id,
+                paymentId: orderId,
+                paymentLink: payment.data.payment_url,
+            });
 
             return res.status(200).json({
                 message: "Registrasi sukses",
                 paymentLink: payment.data.payment_url,
             });
+
         } catch (error: any) {
             console.error(error.response);
             return res.status(500).json({ message: "Internal server error" });
@@ -271,7 +287,7 @@ export const eventController = {
             if (!eventDuration) return res.status(404).json({ message: "Event tidak ditemukan" });
 
             const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: { [Op.not]: "passed" } } });
-
+            
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
             if (registration.lastQR === qrCode) {
@@ -279,12 +295,8 @@ export const eventController = {
             }
 
             if (registration.status === "registered") {
-                if (registration.payments === "UNPAID") {
-                    const paymentCheck = await paymentService.checkPayment(registration.paymentId!);
-                    if (!paymentCheck.paid) return res.status(400).json({ message: "Pembayaran belum selesai" });
-                    registration.paymentId = paymentCheck.orderId;
-                    registration.payments = "PAID";
-                }
+                const paymentCheck = await paymentService.checkPayment(registration.id!);
+                if (!paymentCheck) return res.status(400).json({ message: "Pembayaran belum lunas" });
                 registration.status = "checked-in";
             }
 
