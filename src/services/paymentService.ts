@@ -48,14 +48,12 @@ export const paymentService = {
         );
     },
     checkPayment: async (registrationId: string) => {
-
         const payment : PaymentInterface | null = await Payment.findOne({where: {registrationId: registrationId}});
         if (!payment) return false;
         const response =  await axios.get(`${MIDTRANS_BASE_URL}/v1/payment-links/${payment.paymentId}`, {
             headers,
         });
-        
-        if (response.status === 404 || response.data.purchases[0]?.payment_status !== 'SETTLEMENT') return false;  
+        if (response.status === 404 || response.data.purchases[response.data.purchases.length - 1]?.payment_status !== 'SETTLEMENT') return false;  
         payment.payments = 'PAID';
         await payment.save();
         

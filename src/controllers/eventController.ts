@@ -117,10 +117,14 @@ export const eventController = {
     },
     // cek detail event
     detailEvent: async (req: Request, res: Response) => {
-        console.log("fetching");
         try {
             const { id } = req.params;
-            const event: EventInterface | null = await Event.findOne({ where: { id } });
+            const event: EventInterface | null = await Event.findOne({ where: { id }, include: {
+                model: Registration,
+                attributes: ['id'],
+                as: 'registrations',
+                required: false,
+            } });
             if (!event) {
                 return res.status(404).json({ message: "Event tidak ditemukan" });
             }
