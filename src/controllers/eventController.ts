@@ -278,8 +278,7 @@ export const eventController = {
     // buat absensi
     markAttendance: async (req: Request, res: Response) => {
         try {
-            const { id } = req.params; // eventId
-            const { qrCode, date } = req.body;
+            const { qrCode, date, eventId: id } = req.body;
             const { id: userId } = req.user as any;
 
             const isValidDate = dayjs(new Date()).diff(date ?? null, "d") === 0;
