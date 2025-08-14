@@ -2,7 +2,7 @@ import { Model, ModelStatic } from "sequelize";
 import { FindAllFromDbType } from "../types/dbServiceType";
 
 export const dbService = {
-    findAllFromDb: async ({ where, limit, offset, order, attributes, page, includeModel, includeAttributes, alias }: FindAllFromDbType, model: ModelStatic<Model<any, any>>) => {
+    findAllFromDb: async ({ where, limit, offset, order, attributes, page, includeModel, includeAttributes, alias, includeWhere, innerJoin }: FindAllFromDbType, model: ModelStatic<Model<any, any>>) => {
         const { rows, count } = await model.findAndCountAll({
             where,
             limit,
@@ -13,7 +13,9 @@ export const dbService = {
             {
                 model: includeModel,
                 attributes: includeAttributes,
-                as: alias
+                as: alias,
+                where: includeWhere,
+                required: innerJoin ?? true,
             } : undefined
         });
 

@@ -6,7 +6,7 @@ async function seedEvent() {
     const total = 140;
     for (let i = 0; i < total; i++) {
         const event = {
-            title: 'Pengenalan GIS Bootcamp',
+            title: `Bootcamp ${faker.lorem.words(3)}`,
             description: faker.lorem.sentence(),
             mentor: faker.person.fullName(),
             location: 'iLab GIS',

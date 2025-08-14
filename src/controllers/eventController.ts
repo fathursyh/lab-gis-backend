@@ -40,6 +40,33 @@ export const eventController = {
             res.status(500).json({ message: "Internal server error" });
         }
     },
+    // get all event tapi tandain yg beres
+    getEventTagged: async (req: Request, res: Response) => {
+         try {
+            const {id: userId} = req.user as any;
+            const page = parseInt((req.query.page as string) || "1", 10);
+            const search = (req.query.search as string) || "";
+            const limit = 10;
+            const offset = (page - 1) * limit;
+            const where = search
+                ? {
+                      [Op.or]: [
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                      ],
+                  }
+                : {};
+            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page, includeModel: Registration, includeAttributes: ['status'], alias: 'registrations', includeWhere: {userId: userId}, innerJoin: false };
+
+            // start fetching
+            const result = await dbService.findAllFromDb(params, Event);
+
+            return res.json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    },
     // buat get event based on registration milik user
     getUserEvent: async (req: Request, res: Response) => {
         try {
@@ -191,15 +218,18 @@ export const eventController = {
             // 4. Buat registrasi
             const today = new Date();
             const orderId = `order-gis-${eventId.slice(0, 6)}-${today.getMonth()}${today.getFullYear()}-${today.getMilliseconds()}`;
+            
+            const payment = await paymentService.requestPaymentLink(event, user, orderId);
+
             await Registration.create({
                 eventId,
                 userId: user.id,
                 paymentId: orderId,
+                paymentLink: payment.data.payment_url
             });
 
-            const payment = await paymentService.requestPaymentLink(event, user, orderId);
 
-            return res.status(201).json({
+            return res.status(200).json({
                 message: "Registrasi sukses",
                 paymentLink: payment.data.payment_url,
             });

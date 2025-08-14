@@ -35,10 +35,6 @@ export const paymentService = {
                 }
             ],
             usage_limit: 1,
-            expiry: {
-                duration: 2,
-                unit: 'days'
-            }
         };
         return await axios(
             `${MIDTRANS_BASE_URL}/v1/payment-links`,

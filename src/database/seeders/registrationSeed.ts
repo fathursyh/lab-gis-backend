@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { Event, Registration, User } from "../../models";
 
 
@@ -14,8 +15,8 @@ async function seedRegistration() {
     const today = new Date();
     for (let i = 0; i < 10; i++) {
         const registration = {
-            userId: users[Math.round(Math.random() * 9)].dataValues.id,
-            eventId: events[Math.round(Math.random() * 29)].dataValues.id,
+            userId: faker.helpers.uniqueArray(users.map(item => item.dataValues.id), 1),
+            eventId: faker.helpers.uniqueArray(events.map(item => item.dataValues.id), 1),
             paymentId: `order-gis-${events[Math.round(Math.random() * 29)].dataValues.id.slice(0, 6)}-${today.getMonth()}${today.getFullYear()}`
         }
         registrations.push(registration);

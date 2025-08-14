@@ -5,9 +5,11 @@ export type FindAllFromDbType = {
     limit: number,
     offset: number,
     order: any,
-    attributes: string[],
+    attributes: any[],
     page: number,
     includeModel?: ModelStatic<Model<any, any>>,
     alias?: string,
-    includeAttributes?: string[]
+    includeAttributes?: any[],
+    includeWhere?: any,
+    innerJoin?: boolean
 }

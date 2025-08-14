@@ -3,6 +3,7 @@ import authRoute from "./src/routes/authRoutes";
 import userRoute from "./src/routes/userRoutes";
 import adminRoute from "./src/routes/adminRoutes";
 import eventRoute from "./src/routes/eventRoutes";
+import registrationRoute from "./src/routes/registrationRoutes";
 import paymentRoute from "./src/routes/paymentRoutes";
 import rateLimit from 'express-rate-limit';
 import express from 'express'
@@ -46,6 +47,7 @@ app.use(limiter);
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use('/api/event', eventRoute);
+app.use('/api/registration', registrationRoute);
 app.use('/api/payments', paymentRoute);
 app.use('/api/admin-only', adminRoute);
 

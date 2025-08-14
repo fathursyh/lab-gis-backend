@@ -31,7 +31,11 @@ const Registration = sequelize.define("Registration", {
     paymentId: {
         type: DataTypes.STRING(40),
         allowNull: true,
-    }
+    },
+    paymentLink: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     createdAt: 'registeredAt'
 });
