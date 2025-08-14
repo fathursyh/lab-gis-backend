@@ -10,6 +10,9 @@ const router = Router({ strict: true }).use(passport.authenticate("jwt", { sessi
 // * fetch semua event
 router.get('/', eventController.getEvent);
 
+// * fetch event dalam registrasi user
+router.get('/user-event', eventController.getUserEvent);
+
 // * show event
 router.get('/detail/:id', eventController.detailEvent);
 

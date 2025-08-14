@@ -16,7 +16,7 @@ async function seedRegistration() {
         const registration = {
             userId: users[Math.round(Math.random() * 9)].dataValues.id,
             eventId: events[Math.round(Math.random() * 29)].dataValues.id,
-            paymentId: `order-gis-${events[Math.round(Math.random() * 29)].dataValues.id.slice(0, 6)}-${today.getMonth()}${today.getFullYear}`
+            paymentId: `order-gis-${events[Math.round(Math.random() * 29)].dataValues.id.slice(0, 6)}-${today.getMonth()}${today.getFullYear()}`
         }
         registrations.push(registration);
     }

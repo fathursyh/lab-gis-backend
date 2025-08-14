@@ -23,17 +23,11 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                    [Op.or]: [
-                        Sequelize.where(
-                            Sequelize.fn('LOWER', Sequelize.col('title')),
-                            { [Op.like]: `%${search.toLowerCase()}%` }
-                        ),
-                        Sequelize.where(
-                            Sequelize.fn('LOWER', Sequelize.col('mentor')),
-                            { [Op.like]: `%${search.toLowerCase()}%` }
-                        )
-                    ]
-                }
+                      [Op.or]: [
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                      ],
+                  }
                 : {};
             const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page };
 
@@ -46,16 +40,51 @@ export const eventController = {
             res.status(500).json({ message: "Internal server error" });
         }
     },
+    // buat get event based on registration milik user
+    getUserEvent: async (req: Request, res: Response) => {
+        try {
+            const {id: userId} = req.user as any
+            const page = parseInt((req.query.page as string) || "1", 10);
+            const search = (req.query.search as string) || "";
+            const limit = 10;
+            const offset = (page - 1) * limit;
+            const where = search
+                ? {
+                      [Op.and]: [
+                          {
+                              [Op.or]: [
+                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                              ],
+                          },
+                          {
+                            userId
+                          }
+                      ],
+                  }
+                : {
+                    userId
+                };
+            const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ['status'], page, includeModel: Event, includeAttributes: eventAttributes, alias: 'event' };
+
+            // start fetching
+            const result = await dbService.findAllFromDb(params, Registration);
+
+            return res.json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    },
     // cek detail event
     detailEvent: async (req: Request, res: Response) => {
-        console.log('fetching')
+        console.log("fetching");
         try {
             const { id } = req.params;
             const event: EventInterface | null = await Event.findOne({ where: { id } });
             if (!event) {
                 return res.status(404).json({ message: "Event tidak ditemukan" });
             }
-            console.log(event);
             return res.json(event);
         } catch (err) {
             console.error(err);
@@ -78,7 +107,7 @@ export const eventController = {
                 endDate,
                 banner,
                 quota,
-                price
+                price,
             });
 
             return res.status(201).json({
@@ -165,16 +194,16 @@ export const eventController = {
             await Registration.create({
                 eventId,
                 userId: user.id,
-                paymentId: orderId
+                paymentId: orderId,
             });
 
             const payment = await paymentService.requestPaymentLink(event, user, orderId);
 
             return res.status(201).json({
                 message: "Registrasi sukses",
-                paymentLink: payment.data.payment_url
+                paymentLink: payment.data.payment_url,
             });
-        } catch (error : any) {
+        } catch (error: any) {
             console.error(error.response);
             return res.status(500).json({ message: "Internal server error" });
         }
@@ -201,18 +230,18 @@ export const eventController = {
         try {
             const { id } = req.params; // eventId
             const { qrCode, date } = req.body;
-            const {id: userId} = req.user as any;
+            const { id: userId } = req.user as any;
 
-            const isValidDate = dayjs(new Date).diff(date?? null, 'd') === 0;
-            
-            if (!isValidDate) return res.status(400).json({message: 'QR kadaluarsa'});
+            const isValidDate = dayjs(new Date()).diff(date ?? null, "d") === 0;
 
-            const eventDuration = await Event.findOne({where: {id}, attributes: ['startDate', 'endDate']}).then((data: EventInterface | null) => data?.duration);
+            if (!isValidDate) return res.status(400).json({ message: "QR kadaluarsa" });
 
-            if (!eventDuration) return res.status(404).json({message: "Event tidak ditemukan"});
+            const eventDuration = await Event.findOne({ where: { id }, attributes: ["startDate", "endDate"] }).then((data: EventInterface | null) => data?.duration);
 
-            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: {[Op.not]: 'passed'} } });
-            
+            if (!eventDuration) return res.status(404).json({ message: "Event tidak ditemukan" });
+
+            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: { [Op.not]: "passed" } } });
+
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
             if (registration.lastQR === qrCode) {
@@ -220,20 +249,20 @@ export const eventController = {
             }
 
             if (registration.status === "registered") {
-                if (registration.payments === 'UNPAID') {
+                if (registration.payments === "UNPAID") {
                     const paymentCheck = await paymentService.checkPayment(registration.paymentId!);
-                    if (!paymentCheck.paid) return res.status(400).json({message: 'Pembayaran belum selesai'});
+                    if (!paymentCheck.paid) return res.status(400).json({ message: "Pembayaran belum selesai" });
                     registration.paymentId = paymentCheck.orderId;
                     registration.payments = "PAID";
                 }
                 registration.status = "checked-in";
             }
-            
+
             registration.attendance = registration.attendance! + 1;
             registration.lastQR = qrCode;
 
             if (registration.attendance === eventDuration) {
-                registration.status = 'passed'
+                registration.status = "passed";
             }
 
             await registration.save();
