@@ -266,9 +266,11 @@ export const eventController = {
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
             // Payload event id isinya
-            const payload = JSON.stringify({ eventId: event.id, qrCode: randomUUID(), date: new Date() });
-            const qr = await QRCode.toDataURL(payload);
-
+            const todayCode = randomUUID();
+            const payload = JSON.stringify({ eventId: event.id, qrCode: todayCode, date: new Date() });
+            event.currentCode = todayCode;
+            const qr = await QRCode.toDataURL(payload, {width: 500 });
+            await event.save();
             return res.json({ qrCode: qr });
         } catch (error) {
             console.error(error);
@@ -285,11 +287,15 @@ export const eventController = {
 
             if (!isValidDate) return res.status(400).json({ message: "QR kadaluarsa" });
 
-            const eventDuration = await Event.findOne({ where: { id }, attributes: ["startDate", "endDate"] }).then((data: EventInterface | null) => data?.duration);
+            const event : EventInterface | null = await Event.findByPk(id, {
+                attributes: ['currentCode', 'startDate', 'endDate']
+            })
+            if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
-            if (!eventDuration) return res.status(404).json({ message: "Event tidak ditemukan" });
+            if (event.currentCode !== qrCode) return res.status(400).json({message: 'QR code tidak diterima'});
+            const eventDuration = event?.duration;
 
-            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: { [Op.not]: "passed" } } });
+            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: { [Op.not]: "passed" } }, attributes: ['id', 'lastQR', 'status', 'attendance'] });
             
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
@@ -314,12 +320,6 @@ export const eventController = {
 
             return res.json({
                 message: "Presensi berhasil dicatat",
-                registration: {
-                    id: registration.id,
-                    status: registration.status,
-                    eventId: registration.eventId,
-                    userId: registration.userId,
-                },
             });
         } catch (error) {
             console.error(error);

@@ -9,19 +9,19 @@ const Event = sequelize.define("Event", {
         primaryKey: true,
     },
     title: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false,
     },
     description: {
-        type: DataTypes.TEXT,
+        type: DataTypes.STRING(100),
         allowNull: false,
     },
     mentor: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false,
     },
     location: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(50),
         allowNull: false
     },
     startDate: {
@@ -37,13 +37,17 @@ const Event = sequelize.define("Event", {
         allowNull: true,
     },
     quota: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.TINYINT,
         defaultValue: 0,
         allowNull: false
     },
     price: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    currentCode: {
+        type: DataTypes.STRING(50),
+        allowNull: true
     },
     duration: {
         type: DataTypes.VIRTUAL,

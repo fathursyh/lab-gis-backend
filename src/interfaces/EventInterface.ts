@@ -12,4 +12,5 @@ export interface EventInterface extends Model  {
     quota?: number,
     duration?: number,
     price?: number,
+    currentCode?: string,
 }
