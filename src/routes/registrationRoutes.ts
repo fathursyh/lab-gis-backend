@@ -2,7 +2,8 @@ import { Request, Response, Router } from "express";
 import passport from "passport";
 import { Payment, Registration } from "../models";
 
-const router = Router({ strict: true }).use(passport.authenticate("jwt", { session: false }));
+const router = Router({ strict: true })
+.use(passport.authenticate("jwt", { session: false }));
 
 router.get("/getRegistration/:eventId", async (req: Request, res: Response) => {
     try {

@@ -19,7 +19,7 @@ const Registration = sequelize.define("Registration", {
         defaultValue: 0,
     },
     lastQR: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(50),
         allowNull: true,
     },
 }, {

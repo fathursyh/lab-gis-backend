@@ -15,6 +15,8 @@ const Payment = sequelize.define("Payment", {
     paymentLink: {
         type: DataTypes.STRING,
         allowNull: true,
-    },
+    }
+}, {
+    indexes: [{ unique: true, fields: ['registrationId'] }]
 });
 export default Payment;
