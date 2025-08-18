@@ -140,7 +140,7 @@ export const eventController = {
             const { title, description, location, startDate, endDate, quota, mentor, price } = req.body;
 
             const banner = req.file ? `/uploads/${req.file.filename}` : null;
-
+            console.log(req.file);
             const event = await Event.create({
                 title,
                 description,
@@ -167,7 +167,6 @@ export const eventController = {
         try {
             const { id } = req.params;
             const { title, description, location, mentor, startDate, endDate, quota, price } = req.body;
-
             const event = await Event.findByPk(id);
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
             let banner = (event as any).banner;
@@ -177,6 +176,12 @@ export const eventController = {
                     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                 }
                 banner = `/uploads/${(req as any).file.filename}`;
+            } else {
+                if (banner) {
+                    const oldPath = path.join(__dirname, "../..", banner);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                    banner = null;
+                }
             }
 
             await event.update({ title, description, mentor, location, startDate, endDate, quota, banner, price });
