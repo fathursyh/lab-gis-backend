@@ -7,7 +7,6 @@ const router = Router({ strict: true })
 
 router.get("/getRegistration/:eventId", async (req: Request, res: Response) => {
     try {
-        console.log('fetch')
         const { id: userId } = req.user as any;
         const { eventId } = req.params;
         const registration = await Registration.findOne({

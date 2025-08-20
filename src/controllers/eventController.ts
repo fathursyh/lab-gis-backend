@@ -10,6 +10,7 @@ import { dbService } from "../services/dbService";
 import { randomUUID } from "crypto";
 import dayjs from "dayjs";
 import { paymentService } from "../services/paymentService";
+import { certificationService } from "../services/certificationService";
 
 const eventAttributes = ["id", "title", "description", "mentor", "price", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
 
@@ -54,8 +55,15 @@ export const eventController = {
                           Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
                           Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
                       ],
+                      startDate: {
+                          [Op.gt]: Sequelize.fn("CURDATE"),
+                      },
                   }
-                : {};
+                : {
+                      startDate: {
+                          [Op.gt]: Sequelize.fn("CURDATE"),
+                      },
+                  };
             const params = {
                 where,
                 limit,
@@ -119,12 +127,15 @@ export const eventController = {
     detailEvent: async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            const event: EventInterface | null = await Event.findOne({ where: { id }, include: {
-                model: Registration,
-                attributes: ['id'],
-                as: 'registrations',
-                required: false,
-            } });
+            const event: EventInterface | null = await Event.findOne({
+                where: { id },
+                include: {
+                    model: Registration,
+                    attributes: ["id"],
+                    as: "registrations",
+                    required: false,
+                },
+            });
             if (!event) {
                 return res.status(404).json({ message: "Event tidak ditemukan" });
             }
@@ -140,7 +151,6 @@ export const eventController = {
             const { title, description, location, startDate, endDate, quota, mentor, price } = req.body;
 
             const banner = req.file ? `/uploads/${req.file.filename}` : null;
-            console.log(req.file);
             const event = await Event.create({
                 title,
                 description,
@@ -257,7 +267,6 @@ export const eventController = {
                 message: "Registrasi sukses",
                 paymentLink: payment.data.payment_url,
             });
-
         } catch (error: any) {
             console.error(error.response);
             return res.status(500).json({ message: "Internal server error" });
@@ -274,7 +283,7 @@ export const eventController = {
             const todayCode = randomUUID();
             const payload = JSON.stringify({ eventId: event.id, qrCode: todayCode, date: new Date() });
             event.currentCode = todayCode;
-            const qr = await QRCode.toDataURL(payload, {width: 500 });
+            const qr = await QRCode.toDataURL(payload, { width: 500 });
             await event.save();
             return res.json({ qrCode: qr });
         } catch (error) {
@@ -292,16 +301,19 @@ export const eventController = {
 
             if (!isValidDate) return res.status(400).json({ message: "QR kadaluarsa" });
 
-            const event : EventInterface | null = await Event.findByPk(id, {
-                attributes: ['currentCode', 'startDate', 'endDate']
-            })
+            const event: EventInterface | null = await Event.findByPk(id, {
+                attributes: ["currentCode", "startDate", "endDate", "id"],
+            });
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
-            if (event.currentCode !== qrCode) return res.status(400).json({message: 'QR code tidak diterima'});
+            if (event.currentCode !== qrCode) return res.status(400).json({ message: "QR code tidak diterima" });
             const eventDuration = event?.duration;
 
-            const registration: RegistrationInterface | null = await Registration.findOne({ where: { eventId: id, userId, status: { [Op.not]: "passed" } }, attributes: ['id', 'lastQR', 'status', 'attendance'] });
-            
+            const registration: RegistrationInterface | null = await Registration.findOne({
+                where: { eventId: id, userId, status: { [Op.not]: "passed" } },
+                attributes: ["id", "lastQR", "status", "attendance"],
+            });
+
             if (!registration) return res.status(404).json({ message: "Data registrasi tidak ada" });
 
             if (registration.lastQR === qrCode) {
@@ -319,6 +331,7 @@ export const eventController = {
 
             if (registration.attendance === eventDuration) {
                 registration.status = "passed";
+                await certificationService.createCertificate(event.id!, registration.id!);
             }
 
             await registration.save();

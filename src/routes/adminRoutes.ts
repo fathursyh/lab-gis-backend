@@ -19,7 +19,7 @@ router.patch("/change-role", async (req: Request, res: Response) => {
 
 router.get("/dashboard", async (_: Request, res: Response) => {
     try {
-        const totalUsers = await User.count({ attributes: [] });
+        const totalUsers = await User.count({ attributes: ['role'], where: {role: 'member'} });
         const totalPayments = await Payment.count({ attributes: [], where: {payments: 'PAID'} });
         const totalEvents = await Event.count({attributes: []});
         const activeEvents = await Event.count({attributes: ['endDate'], where: {
