@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import { paymentService } from "../services/paymentService";
 import { certificationService } from "../services/certificationService";
 
-const eventAttributes = ["id", "title", "description", "mentor", "price", "banner", "quota", "location", "startDate", "endDate", "createdAt"];
+const eventAttributes = ["id", "title", "description", "mentor", "price", "banner", "quota", "location", "onlineLocation", "startDate", "endDate", "registerDate", "createdAt"];
 
 export const eventController = {
     // buat fetch semua
@@ -24,11 +24,11 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                      [Op.or]: [
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                      ],
-                  }
+                    [Op.or]: [
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                    ],
+                }
                 : {};
             const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page };
 
@@ -51,19 +51,19 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                      [Op.or]: [
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                      ],
-                      startDate: {
-                          [Op.gt]: Sequelize.fn("CURDATE"),
-                      },
-                  }
+                    [Op.or]: [
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                    ],
+                    startDate: {
+                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                    },
+                }
                 : {
-                      startDate: {
-                          [Op.gt]: Sequelize.fn("CURDATE"),
-                      },
-                  };
+                    startDate: {
+                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                    },
+                };
             const params = {
                 where,
                 limit,
@@ -97,21 +97,21 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                      [Op.and]: [
-                          {
-                              [Op.or]: [
-                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                              ],
-                          },
-                          {
-                              userId,
-                          },
-                      ],
-                  }
+                    [Op.and]: [
+                        {
+                            [Op.or]: [
+                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                            ],
+                        },
+                        {
+                            userId,
+                        },
+                    ],
+                }
                 : {
-                      userId,
-                  };
+                    userId,
+                };
             const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ["status"], page, includeModel: Event, includeAttributes: eventAttributes, alias: "event" };
 
             // start fetching
@@ -148,14 +148,16 @@ export const eventController = {
     // buat event baru
     newEvent: async (req: Request, res: Response) => {
         try {
-            const { title, description, location, startDate, endDate, quota, mentor, price } = req.body;
+            const { title, description, onlineLocation, location, registerDate, startDate, endDate, quota, mentor, price } = req.body;
 
             const banner = req.file ? `/uploads/${req.file.filename}` : null;
             const event = await Event.create({
                 title,
                 description,
                 location,
+                onlineLocation,
                 mentor,
+                registerDate,
                 startDate,
                 endDate,
                 banner,
@@ -176,25 +178,27 @@ export const eventController = {
     updateEvent: async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            const { title, description, location, mentor, startDate, endDate, quota, price } = req.body;
+            const { title, description, location, onlineLocation, mentor, registerDate, startDate, endDate, quota, price, deleteBanner } = req.body;
             const event = await Event.findByPk(id);
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
             let banner = (event as any).banner;
-            if ((req as any).file) {
+
+            if (!(req as any).file) {
+                if ((deleteBanner === true || deleteBanner === 'true') && banner) {
+                    const oldPath = path.join(__dirname, "../..", banner);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                    banner = null;
+                }
+            } else {
                 if (banner) {
                     const oldPath = path.join(__dirname, "../..", banner);
                     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                 }
                 banner = `/uploads/${(req as any).file.filename}`;
-            } else {
-                if (banner) {
-                    const oldPath = path.join(__dirname, "../..", banner);
-                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-                    banner = null;
-                }
+
             }
 
-            await event.update({ title, description, mentor, location, startDate, endDate, quota, banner, price });
+            await event.update({ title, description, mentor, onlineLocation, location, registerDate, startDate, endDate, quota, banner, price });
 
             return res.json({ message: "Event berhasil diubah", event });
         } catch (error) {
@@ -233,8 +237,11 @@ export const eventController = {
             const user = req.user as any;
 
             // 1. Pastikan event ada
-            const event = await Event.findByPk(eventId);
+            const event: EventInterface | null = await Event.findByPk(eventId);
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
+
+            // cek masa pendaftaran masih dibuka atau tidak
+            if (event.endRegisterDate) return res.status(400).json({ message: 'Masa pendaftaran sudah ditutup' });
 
             // 2. Cek apakah sudah daftar
             const alreadyRegistered = await Registration.findOne({

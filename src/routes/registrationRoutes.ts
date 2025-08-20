@@ -9,10 +9,11 @@ router.get("/getRegistration/:eventId", async (req: Request, res: Response) => {
     try {
         const { id: userId } = req.user as any;
         const { eventId } = req.params;
-        const registration = await Registration.findOne({
+            const registration = await Registration.findOne({
             where: { userId, eventId },
             include: {
                 model: Payment,
+                as: 'payment',
                 attributes: ["paymentLink", "payments"],
                 isSingleAssociation: true,
             },
@@ -20,7 +21,7 @@ router.get("/getRegistration/:eventId", async (req: Request, res: Response) => {
         if (!registration) return res.status(404).json({ message: "Registrasi tidak ditemukan" });
         return res.status(200).json(registration);
     } catch (err: any) {
-        console.error(err.response);
+        console.error(err);
         return res.status(500).json({ message: "Internal server error" });
     }
 });

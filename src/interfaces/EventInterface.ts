@@ -5,7 +5,9 @@ export interface EventInterface extends Model  {
     title?: string,
     description?: string,
     mentor?: string,
+    onlineLocation?: string,
     location?: string,
+    registerDate?: Date,
     startDate?: Date,
     endDate?: Date,
     banner?: string,
@@ -13,4 +15,5 @@ export interface EventInterface extends Model  {
     duration?: number,
     price?: number,
     currentCode?: string,
+    endRegisterDate?: boolean,
 }

@@ -3,14 +3,16 @@ import { Event } from "../../models";
 
 async function seedEvent() {
     const events = [];
-    const total = 140;
+    const total = 30;
     for (let i = 0; i < total; i++) {
         const event = {
             title: `Bootcamp ${faker.lorem.words(3)}`,
             description: faker.lorem.sentence(),
             mentor: faker.person.fullName(),
             location: 'iLab GIS',
-            startDate: faker.date.soon({days: 1}),
+            onlineLocation: 'gmeet.com',
+            registerDate: faker.date.soon({days: 3}),
+            startDate: faker.date.soon({days: 4}),
             endDate: faker.date.soon({days: 30}),
             quota: faker.number.int({min: 25, max: 50}),
             price: faker.finance.amount({min: 100000, max: 500000})
