@@ -3,9 +3,10 @@ import passport from "passport";
 import { checkAdmin } from "../middlewares/checkAdmin";
 import { Event, Payment, User } from "../models";
 import { Op, Sequelize } from "sequelize";
+
 const router = Router({ strict: true })
-    .use(passport.authenticate("jwt", { session: false }))
-    .use(checkAdmin);
+.use(passport.authenticate("jwt", { session: false }))
+.use(checkAdmin);
 
 router.patch("/change-role", async (req: Request, res: Response) => {
     const { id, role } = req.body;
@@ -19,23 +20,26 @@ router.patch("/change-role", async (req: Request, res: Response) => {
 
 router.get("/dashboard", async (_: Request, res: Response) => {
     try {
-        const totalUsers = await User.count({ attributes: ['role'], where: {role: 'member'} });
-        const totalPayments = await Payment.count({ attributes: [], where: {payments: 'PAID'} });
-        const totalEvents = await Event.count({attributes: []});
-        const activeEvents = await Event.count({attributes: ['endDate'], where: {
-            endDate: {
-                [Op.gte]: Sequelize.fn('CURDATE')
-            }
-        } })
+        const totalUsers = await User.count({ attributes: ["role"], where: { role: "member" } });
+        const totalPayments = await Payment.count({ attributes: [], where: { payments: "PAID" } });
+        const totalEvents = await Event.count({ attributes: [] });
+        const activeEvents = await Event.count({
+            attributes: ["endDate"],
+            where: {
+                endDate: {
+                    [Op.gte]: Sequelize.fn("CURDATE"),
+                },
+            },
+        });
 
         return res.json({
             totalEvents,
             totalPayments,
             totalUsers,
-            activeEvents
+            activeEvents,
         });
     } catch (err) {
-        console.log(err)
+        console.log(err);
         res.status(500).json({ message: "Internal server error." });
     }
 });

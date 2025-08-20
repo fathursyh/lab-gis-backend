@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Certificate</title>
+        <style>
+            @page {
+                size: A4 landscape; /* Landscape */
+                margin: 0;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: "Times New Roman", serif;
+                background-color: #fdfdf8;
+            }
+
+            .certificate {
+                position: relative;
+                border: 12px solid #2c3e50;
+                width: 100%;
+                height: 100%;
+                padding: 30px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            #certificate-number {
+                padding: 8px;
+                position: absolute;
+                left: 42px;
+                top: 36px;
+            }
+            #certificate-number p {
+                padding: 0;
+                text-align: left;
+                color: #555555;
+                font-size: 12px;
+            }
+
+            .inner-border {
+                border: 6px solid #2c3e50;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 40px 60px;
+                box-sizing: border-box;
+            }
+
+            .logo img {
+                height: 80px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+
+            .title {
+                font-size: 50px;
+                font-weight: bold;
+                color: #2c3e50;
+                margin-bottom: 10px;
+                letter-spacing: 2px;
+            }
+
+            .subtitle {
+                font-size: 22px;
+                color: #555;
+                margin-bottom: 50px;
+            }
+
+            .name {
+                font-size: 42px;
+                font-weight: bold;
+                margin-bottom: 25px;
+                color: #000;
+            }
+
+            .course {
+                font-size: 24px;
+                margin-bottom: 60px;
+                line-height: 1.5;
+            }
+
+            .instructor {
+                margin-top: auto;
+                font-size: 20px;
+                text-align: center;
+            }
+
+            .instructor p {
+                border-bottom: 1px solid #000;
+                width: 250px;
+                padding-bottom: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="certificate">
+            <div id="certificate-number">
+                <p>Link: https://host.com/certificate?id=tes</p>
+                <p>No: <%= certificateNumber %></p>
+                <p>Date: <%= date %></p>
+            </div>
+            <div class="inner-border">
+                <div class="logo">
+                    <img src="<%= logo %>" alt="Logo" />
+                </div>
+
+                <div class="title">CERTIFICATE OF COMPLETION</div>
+                <div class="subtitle">This certificate is proudly presented to</div>
+
+                <div class="name"><%= name %></div>
+
+                <div class="course">
+                    For successfully completing the course <br />
+                    <b><%= course %></b>
+                    <p>36 Hours</p>
+                </div>
+
+                <div class="instructor">
+                    <p><b><%= instructor %></b></p>
+                    <div>Mentor</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
