@@ -4,10 +4,13 @@ import { eventController } from "../controllers/eventController";
 import { upload } from "../middlewares/upload";
 import { checkAdmin } from "../middlewares/checkAdmin";
 
-const router = Router({ strict: true }).use(passport.authenticate("jwt", { session: false }));
+const router = Router({ strict: true })
+.use(passport.authenticate("jwt", { session: false }));
 
 // * fetch semua event
 router.get('/', eventController.getEvent);
+
+router.get('/five-banners', eventController.getFiveBanners);
 
 // * fetch semua event tagged user
 router.get('/event', eventController.getEventTagged)
