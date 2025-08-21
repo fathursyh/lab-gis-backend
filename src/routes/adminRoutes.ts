@@ -44,4 +44,23 @@ router.get("/dashboard", async (_: Request, res: Response) => {
     }
 });
 
+router.get("/active-events", async (_: Request, res: Response) => {
+    try {
+        const today = new Date();
+        const onlyDate = today.toISOString().slice(0, 10); 
+        const events = await Event.findAll({
+            limit: 10,
+            attributes: ["id", "title", "startDate", "endDate"],
+            where: {
+                startDate: { [Op.lte]: onlyDate },
+                endDate: { [Op.gte]: onlyDate },
+            },
+        });
+        return res.json({events});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal server error." });
+    }
+});
+
 export default router;
