@@ -1,4 +1,4 @@
-import { Certification, Registration } from "../models";
+import { Certification, Event, Registration } from "../models";
 import puppeteer from "puppeteer";
 import fs from "fs";
 import ejs from "ejs";
@@ -51,4 +51,24 @@ export const certificationService = {
         await browser.close();
         return pdfBuffer;
     },
+    getUserCertificates: async (userId: string) => {
+        return await Certification.findAndCountAll({
+            limit: 5,
+            include: [
+                {
+                    model: Registration,
+                    as: 'registration',
+                    where: { userId },
+                    include: [
+                        {
+                            model: Event,
+                            as: 'event',
+                            attributes: ['title']
+                        }
+                    ]
+                },
+            ]
+        });
+
+    }
 };

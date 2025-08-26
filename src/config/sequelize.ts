@@ -14,7 +14,8 @@ export const sequelize: Sequelize = new Sequelize(process.env.DB_NAME!, process.
 });
 
 export const syncDatabase =  async() => {
-    await sequelize.sync({force: true});
+    await sequelize.sync();
     console.log('Database synced.')
-    process.exit();
 }
+
+syncDatabase();

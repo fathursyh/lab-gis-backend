@@ -40,4 +40,14 @@ export const certificateController = {
             res.status(500).json({ message: "Internal server error." });
         }
     },
+    getAllUserCertificates: async (req: Request, res: Response) => {
+        try {
+            const {id} = req.user as any;
+            const {rows, count} = await certificationService.getUserCertificates(id);
+            return res.status(200).json({count, data: rows});
+
+        } catch(err) {
+            return res.status(500).json({message: 'Internal server error'});
+        }
+    }
 };

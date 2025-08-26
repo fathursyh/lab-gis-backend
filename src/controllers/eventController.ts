@@ -43,7 +43,7 @@ export const eventController = {
     },
     getFiveBanners: async (_: Request, res: Response) => {
         try {
-            const event = await Event.findAll({ limit: 5, attributes: ["banner", "createdAt"], order: [["createdAt", "DESC"]] });
+            const event = await Event.findAll({ limit: 5, attributes: ["banner", "startDate", "id"], order: [["startDate", "DESC"]] });
             return res.json(event);
         } catch (err) {
             console.error(err);

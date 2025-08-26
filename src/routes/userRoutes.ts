@@ -1,6 +1,7 @@
 import { Router, Response, Request } from 'express';
 import passport from 'passport';
 import { userController } from '../controllers/userController';
+import { certificateController } from '../controllers/certificateController';
 
 const router = Router({strict: true}).use(passport.authenticate('jwt', {session: false}));
 
@@ -9,5 +10,7 @@ router.get('/token-check', (_: Request, res: Response) => res.sendStatus(200));
 
 // * fetch semua user
 router.get('/all-users', userController.getUsers);
+
+router.get('/user-certificates', certificateController.getAllUserCertificates);
 
 export default router;

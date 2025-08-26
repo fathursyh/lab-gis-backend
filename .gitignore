@@ -29,3 +29,5 @@ coverage/
 # file upload
 /uploads
 
+# gausah dist
+dist
