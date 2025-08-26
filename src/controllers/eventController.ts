@@ -24,11 +24,11 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                    [Op.or]: [
-                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                    ],
-                }
+                      [Op.or]: [
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                      ],
+                  }
                 : {};
             const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page };
 
@@ -36,6 +36,15 @@ export const eventController = {
             const result = await dbService.findAllFromDb(params, Event);
 
             return res.json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    },
+    getFiveBanners: async (_: Request, res: Response) => {
+        try {
+            const event = await Event.findAll({ limit: 5, attributes: ["banner", "createdAt"], order: [["createdAt", "DESC"]] });
+            return res.json(event);
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: "Internal server error" });
@@ -51,19 +60,19 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                    [Op.or]: [
-                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                    ],
-                    startDate: {
-                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
-                    },
-                }
+                      [Op.or]: [
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                      ],
+                      startDate: {
+                          [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                      },
+                  }
                 : {
-                    startDate: {
-                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
-                    },
-                };
+                      startDate: {
+                          [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                      },
+                  };
             const params = {
                 where,
                 limit,
@@ -97,21 +106,21 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                    [Op.and]: [
-                        {
-                            [Op.or]: [
-                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                            ],
-                        },
-                        {
-                            userId,
-                        },
-                    ],
-                }
+                      [Op.and]: [
+                          {
+                              [Op.or]: [
+                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                              ],
+                          },
+                          {
+                              userId,
+                          },
+                      ],
+                  }
                 : {
-                    userId,
-                };
+                      userId,
+                  };
             const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ["status"], page, includeModel: Event, includeAttributes: eventAttributes, alias: "event" };
 
             // start fetching
@@ -184,7 +193,7 @@ export const eventController = {
             let banner = (event as any).banner;
 
             if (!(req as any).file) {
-                if ((deleteBanner === true || deleteBanner === 'true') && banner) {
+                if ((deleteBanner === true || deleteBanner === "true") && banner) {
                     const oldPath = path.join(__dirname, "../..", banner);
                     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                     banner = null;
@@ -195,7 +204,6 @@ export const eventController = {
                     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
                 }
                 banner = `/uploads/${(req as any).file.filename}`;
-
             }
 
             await event.update({ title, description, mentor, onlineLocation, location, registerDate, startDate, endDate, quota, banner, price });
@@ -241,7 +249,7 @@ export const eventController = {
             if (!event) return res.status(404).json({ message: "Event tidak ditemukan" });
 
             // cek masa pendaftaran masih dibuka atau tidak
-            if (event.endRegisterDate) return res.status(400).json({ message: 'Masa pendaftaran sudah ditutup' });
+            if (event.endRegisterDate) return res.status(400).json({ message: "Masa pendaftaran sudah ditutup" });
 
             // 2. Cek apakah sudah daftar
             const alreadyRegistered = await Registration.findOne({
