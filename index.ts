@@ -13,7 +13,7 @@ import path from "path";
 import multer from "multer";
 import { certificateController } from "./src/controllers/certificateController";
 
-const PORT = 3000;
+const PORT = process.env.PORT
 const app = express();
 app.set("view engine", "ejs");
 
