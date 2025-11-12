@@ -25,20 +25,21 @@ export const certificationService = {
         });
         return certificate;
     },
-    generateCertificate: async (certificate: any) => {
+    generateCertificate: async (certificate: any, url: string) => {
         // buat render logo
         const logoPath = path.join(process.cwd(), "public", "gis-logo.jpeg");
         const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
         const logoDataUri = `data:image/jpeg;base64,${logoBase64}`;
 
-        // susun data
+        // ini datanya gaes
         const data = {
             name: certificate.registration.user.fullName,
             course: certificate.registration.event.title,
             date: dayjs(certificate.registration?.updatedAt).format("DD-MM-YYYY"),
-            certificateNumber: "001-GIS-202141",
+            certificateNumber: certificate.certificateNumber,
             instructor: certificate.registration.event.mentor,
             logo: logoDataUri,
+            link: url,
         };
 
         const html = await ejs.renderFile("views/certificate.ejs", data);

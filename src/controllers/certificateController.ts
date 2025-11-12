@@ -30,10 +30,11 @@ export const certificateController = {
             if (!certificate) return res.sendStatus(404);
             if (certificate?.registration.status !== "passed") return res.sendStatus(403)
 
-            const pdfBuffer = await certificationService.generateCertificate(certificate);
+            const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+            const pdfBuffer = await certificationService.generateCertificate(certificate, fullUrl);
 
             res.setHeader("Content-Type", "application/pdf");
-            res.setHeader("Content-Disposition", `inline; filename="certificate-keren1.pdf"`);
+            res.setHeader("Content-Disposition", `inline; filename="certificate.pdf"`);
             res.end(pdfBuffer);
         } catch (err) {
             console.log(err);
@@ -42,12 +43,26 @@ export const certificateController = {
     },
     getAllUserCertificates: async (req: Request, res: Response) => {
         try {
-            const {id} = req.user as any;
-            const {rows, count} = await certificationService.getUserCertificates(id);
-            return res.status(200).json({count, data: rows});
+            const { id } = req.user as any;
+            const { rows, count } = await certificationService.getUserCertificates(id);
+            return res.status(200).json({ count, data: rows });
 
-        } catch(err) {
-            return res.status(500).json({message: 'Internal server error'});
+        } catch (err) {
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+    getCertificateById: async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            console.log(id)
+            const certificate = await Certification.findOne({
+                attributes: ["id", "certificateNumber"],
+                where: { registrationId: id }
+            })
+            return res.status(200).json(certificate);
+
+        } catch (err) {
+            return res.status(500).json({ message: 'Internal server error' });
         }
     }
 };

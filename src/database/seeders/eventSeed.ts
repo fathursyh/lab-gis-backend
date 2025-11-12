@@ -3,11 +3,10 @@ import { Event } from "../../models";
 
 async function seedEvent() {
     const events = [];
-    const total = 5;
-    const titleBank = ['React Native', 'Javascript', 'Laravel', 'Code Igniter', 'Angular']
-    for (let i = 0; i < titleBank.length; i++) {
+    const total = 30;
+    for (let i = 0; i < total; i++) {
         const event = {
-            title: `Bootcamp ${titleBank[i]}`,
+            title: `Bootcamp ${faker.lorem.words(2)}`,
             description: faker.lorem.sentence(),
             mentor: faker.person.fullName(),
             location: 'iLab GIS',

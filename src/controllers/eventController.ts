@@ -43,8 +43,8 @@ export const eventController = {
     },
     getFiveBanners: async (_: Request, res: Response) => {
         try {
-            const event = await Event.findAll({ limit: 5, attributes: ["banner", "startDate", "id"], order: [["startDate", "DESC"]] });
-            return res.json(event);
+            const events = await Event.findAll({ limit: 5, attributes: ["banner", "startDate", "id", "title"], order: [["startDate", "DESC"]] });
+            return res.json(events);
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: "Internal server error" });
@@ -140,9 +140,10 @@ export const eventController = {
                 where: { id },
                 include: {
                     model: Registration,
-                    attributes: ["id"],
+                    attributes: ["id", "status"],
                     as: "registrations",
                     required: false,
+                    isSingleAssociation: true,
                 },
             });
             if (!event) {

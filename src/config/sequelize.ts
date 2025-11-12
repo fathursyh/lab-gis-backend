@@ -18,4 +18,4 @@ export const syncDatabase =  async() => {
     console.log('Database synced.')
 }
 
-syncDatabase();
+// syncDatabase();

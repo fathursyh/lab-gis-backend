@@ -67,7 +67,7 @@ const Event = sequelize.define("Event", {
         type: DataTypes.VIRTUAL,
         get() {
             //? end register day is day-1 of start date
-            return dayjs((this as any).startDate).diff(dayjs().format('YYYY-MM-DD'), 'day') === 0
+            return dayjs((this as any).startDate, 'YYYY-MM-DD').diff(dayjs().format('YYYY-MM-DD'), 'day') <= 0
         }
     }
 });

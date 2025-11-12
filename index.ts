@@ -60,7 +60,9 @@ app.get("/", (_: Request, res: Response) => {
     res.send("Hello, world!");
 });
 
+app.get('/getCertificate/:id', certificateController.getCertificateById);
 app.get("/certificate/:certificateNumber", certificateController.generateCertificatePDF);
+// * query satu sertif
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);

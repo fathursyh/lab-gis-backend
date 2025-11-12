@@ -58,6 +58,7 @@
                 flex-direction: column;
                 align-items: center;
                 padding: 40px 60px;
+                padding-top: 4rem;
                 box-sizing: border-box;
             }
 
@@ -110,7 +111,7 @@
     <body>
         <div class="certificate">
             <div id="certificate-number">
-                <p>Link: https://host.com/certificate?id=tes</p>
+                <p>Link: <%= link %></p>
                 <p>No: <%= certificateNumber %></p>
                 <p>Date: <%= date %></p>
             </div>
@@ -127,7 +128,6 @@
                 <div class="course">
                     For successfully completing the course <br />
                     <b><%= course %></b>
-                    <p>36 Hours</p>
                 </div>
 
                 <div class="instructor">
