@@ -28,8 +28,8 @@ router.get("/dashboard", async (_: Request, res: Response) => {
         const activeEvents = await Event.count({
             attributes: ["startDate", "endDate"],
             where: {
-                startDate: { [Op.lte]: onlyDate },
-                endDate: { [Op.gte]: onlyDate },
+                // startDate: { [Op.lte]: onlyDate },
+                endDate: { [Op.gt]: onlyDate },
             },
         });
 
@@ -44,22 +44,23 @@ router.get("/dashboard", async (_: Request, res: Response) => {
         res.status(500).json({ message: "Internal server error." });
     }
 });
-
 router.get("/active-events", async (_: Request, res: Response) => {
     try {
-        const today = new Date();
-        const onlyDate = today.toISOString().slice(0, 10);
+        const today = new Date().toISOString().slice(0, 10);
+
         const events = await Event.findAll({
-            limit: 10,
+            limit: 5,
             attributes: ["id", "title", "startDate", "endDate"],
             where: {
-                startDate: { [Op.lte]: onlyDate },
-                endDate: { [Op.gte]: onlyDate },
+                startDate: { [Op.lte]: today },
+                endDate: { [Op.gte]: today },
             },
+            order: [["createdAt", "DESC"]],
         });
+
         return res.json({ events });
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({ message: "Internal server error." });
     }
 });

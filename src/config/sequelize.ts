@@ -17,5 +17,3 @@ export const syncDatabase =  async() => {
     await sequelize.sync();
     console.log('Database synced.')
 }
-
-// syncDatabase();

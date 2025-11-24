@@ -20,17 +20,61 @@ export const eventController = {
         try {
             const page = parseInt((req.query.page as string) || "1", 10);
             const search = (req.query.search as string) || "";
+            const status = (req.query.status as string) || "";
+            console.log(`Fetching status: ${status}`); // Log the status for debugging
+
             const limit = 10;
             const offset = (page - 1) * limit;
-            const where = search
+            // Note: strict ISO date (UTC). Ensure your database stores dates in compatible format.
+            const today = new Date().toISOString().slice(0, 10);
+
+            // 🔍 Base search conditions
+            const searchFilter = search
                 ? {
-                      [Op.or]: [
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                      ],
-                  }
+                    [Op.or]: [
+                        Sequelize.where(
+                            Sequelize.fn("LOWER", Sequelize.col("title")),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        ),
+                        Sequelize.where(
+                            Sequelize.fn("LOWER", Sequelize.col("mentor")),
+                            { [Op.like]: `%${search.toLowerCase()}%` }
+                        ),
+                    ],
+                }
                 : {};
-            const params = { where, limit, offset, order: [["createdAt", "DESC"]], attributes: eventAttributes, page };
+
+            // 🔥 Status filter
+            let statusFilter = {};
+
+            if (status === "ongoing") {
+                // Active now: Started in the past/today AND ends in the future/today
+                statusFilter = {
+                    startDate: { [Op.lte]: today },
+                    endDate: { [Op.gte]: today },
+                };
+            } else if (status === "upcoming") {
+                // Future: Starts strictly after today
+                statusFilter = {
+                    startDate: { [Op.gt]: today },
+                };
+            } else if (status === "completed") {
+                // Past: Ended strictly before today
+                statusFilter = {
+                    endDate: { [Op.lt]: today },
+                };
+            }
+
+            const where = { ...searchFilter, ...statusFilter };
+
+            const params = {
+                where,
+                limit,
+                offset,
+                order: [["createdAt", "DESC"]],
+                attributes: eventAttributes, // Ensure this variable is defined in your scope
+                page
+            };
 
             // start fetching
             const result = await dbService.findAllFromDb(params, Event);
@@ -43,7 +87,17 @@ export const eventController = {
     },
     getFiveBanners: async (_: Request, res: Response) => {
         try {
-            const events = await Event.findAll({ limit: 5, attributes: ["banner", "startDate", "id", "title"], order: [["startDate", "DESC"]] });
+            const today = new Date().toISOString().slice(0, 10);
+
+            const events = await Event.findAll({
+                limit: 5,
+                attributes: ["banner", "startDate", "id", "title"],
+                where: {
+                    startDate: { [Op.gt]: today }
+                },
+                order: [["startDate", "ASC"]]
+            });
+
             return res.json(events);
         } catch (err) {
             console.error(err);
@@ -60,19 +114,19 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                      [Op.or]: [
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                          Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                      ],
-                      startDate: {
-                          [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
-                      },
-                  }
+                    [Op.or]: [
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                        Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                    ],
+                    startDate: {
+                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                    },
+                }
                 : {
-                      startDate: {
-                          [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
-                      },
-                  };
+                    startDate: {
+                        [Op.gte]: Sequelize.literal("CURDATE() + INTERVAL 1 DAY"),
+                    },
+                };
             const params = {
                 where,
                 limit,
@@ -106,21 +160,21 @@ export const eventController = {
             const offset = (page - 1) * limit;
             const where = search
                 ? {
-                      [Op.and]: [
-                          {
-                              [Op.or]: [
-                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                                  Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
-                              ],
-                          },
-                          {
-                              userId,
-                          },
-                      ],
-                  }
+                    [Op.and]: [
+                        {
+                            [Op.or]: [
+                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.title")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                                Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("event.mentor")), { [Op.like]: `%${search.toLowerCase()}%` }),
+                            ],
+                        },
+                        {
+                            userId,
+                        },
+                    ],
+                }
                 : {
-                      userId,
-                  };
+                    userId,
+                };
             const params = { where, limit, offset, order: [["registeredAt", "DESC"]], attributes: ["status"], page, includeModel: Event, includeAttributes: eventAttributes, alias: "event" };
 
             // start fetching
